@@ -1,0 +1,14 @@
+{
+  "name": "web-quotes",
+  "description": "a real-time streaming stock quotes app for the web",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "dependencies": {
+    "socket.io": "0.9.16",
+    "redis": "0.8.4",
+    "express": "3.3.5"
+  }
+}
