@@ -1,9 +1,33 @@
-var path = require('path');
-
+var path = require('path')
+  , net = require('net')
+  , events = require('events')
+  , util = require('util');
+    
 var express = require('express')
   , app = express()
   , server = require('http').createServer(app)
   , io = require('socket.io').listen(server);
+
+var ctf = require('./ctf').createClient(net.createConnection(4013, '198.190.11.21', function() {
+  console.log("established ctf connection...");
+}));
+
+// register messsage listener
+ctf.on('message', function(msg) {
+  console.log("new ctf message received: " + JSON.stringify(msg));
+  io.sockets.emit('quotes', msg);
+});
+
+// send login command
+ctf.sendCommand("5022=LoginUser|5028="+'saventech'+"|5029="+'saventech'+"|5026=1");
+ctf.sendCommand("5022=SelectAvailableTokens|5026=2");
+
+// subscribe to the watchlist
+ctf.sendCommand("5022=Subscribe|4=687|5=X:SUSDINR|5026=3");
+
+ctf.addListener("end", function () {
+  console.log("ctf server disconnected...");
+});
 
 // all environments
 app.set('port', process.env.PORT || 8080);
@@ -26,18 +50,9 @@ server.listen(app.get('port'), function(){
 });
 
 io.sockets.on('connection', function (socket) {
-  var id = null;
-  socket.on('subscribe', function (data) {
-    console.log(data);
-    id = setInterval(sendQuotes, 1000, socket);
-  });
+  console.log('client connected');
   
   socket.on('disconnect', function() {
     console.log('client disconnected');
-    clearInterval(id);
   });
 });
-
-function sendQuotes(socket) {
-  socket.emit('quotes', { ticker: 'IBM', price: '100.00' });  
-}
